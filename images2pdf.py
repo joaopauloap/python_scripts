@@ -1,16 +1,16 @@
 import os
 from PIL import Image
+import pytesseract
+from reportlab.pdfgen import canvas
+from reportlab.lib.utils import ImageReader
 
-# Diretório onde o script está
 DIRETORIO_SCRIPT = os.path.dirname(os.path.abspath(__file__))
-
-# Agora esse é o caminho raiz das imagens E o local de saída dos PDFs
 CAMINHO_RAIZ = DIRETORIO_SCRIPT
 DIRETORIO_SAIDA = DIRETORIO_SCRIPT
 
 EXTENSOES_VALIDAS = ('.png', '.jpg', '.jpeg', '.bmp', '.gif', '.tif', '.tiff')
 LARGURA_MAXIMA = 720
-QUALIDADE_JPEG = 60
+
 
 def redimensionar(imagem, largura_maxima):
     largura, altura = imagem.size
@@ -19,9 +19,26 @@ def redimensionar(imagem, largura_maxima):
         return imagem.resize((largura_maxima, nova_altura), Image.LANCZOS)
     return imagem
 
+
+def aplicar_ocr_em_imagem(imagem, canvas_pdf, largura, altura):
+    ocr = pytesseract.image_to_data(imagem, lang="por", output_type=pytesseract.Output.DICT)
+    canvas_pdf.drawImage(ImageReader(imagem), 0, 0, width=largura, height=altura)
+
+    n = len(ocr['text'])
+    for i in range(n):
+        if int(ocr['conf'][i]) > 60:
+            texto = ocr['text'][i].strip()
+            if texto:
+                x = ocr['left'][i]
+                y = altura - ocr['top'][i] - ocr['height'][i]
+                canvas_pdf.setFont("Helvetica", 8)
+                canvas_pdf.setFillColorRGB(1, 1, 1, alpha=0)
+                canvas_pdf.drawString(x, y, texto)
+
+
 def processar_pasta(pasta_path):
-    imagens = []
     arquivos = sorted(os.listdir(pasta_path))
+    imagens = []
 
     for nome_arquivo in arquivos:
         caminho_completo = os.path.join(pasta_path, nome_arquivo)
@@ -39,8 +56,7 @@ def processar_pasta(pasta_path):
             if hasattr(img, "n_frames") and img.n_frames > 1:
                 for i in range(img.n_frames):
                     img.seek(i)
-                    frame = redimensionar(img.copy().convert('RGB'), LARGURA_MAXIMA)
-                    imagens.append(frame)
+                    imagens.append(redimensionar(img.copy().convert('RGB'), LARGURA_MAXIMA))
             else:
                 imagens.append(img)
 
@@ -50,21 +66,22 @@ def processar_pasta(pasta_path):
     if imagens:
         nome_pasta = os.path.basename(pasta_path)
         caminho_pdf = os.path.join(DIRETORIO_SAIDA, f"{nome_pasta}.pdf")
-        imagens[0].save(
-            caminho_pdf,
-            save_all=True,
-            append_images=imagens[1:],
-            quality=QUALIDADE_JPEG,
-            optimize=True
-        )
-        print(f"✅ PDF salvo: {caminho_pdf}")
+        largura, altura = imagens[0].size
+
+        c = canvas.Canvas(caminho_pdf, pagesize=(largura, altura))
+        for imagem in imagens:
+            aplicar_ocr_em_imagem(imagem, c, *imagem.size)
+            c.showPage()
+        c.save()
+
+        print(f"✅ PDF com OCR salvo: {caminho_pdf}")
     else:
         print(f"⚠️ Nenhuma imagem válida em: {pasta_path}")
 
-# Coletar subpastas no mesmo diretório do script
+
+# Processa todas as subpastas
 subpastas = [os.path.join(CAMINHO_RAIZ, p) for p in os.listdir(CAMINHO_RAIZ) if os.path.isdir(os.path.join(CAMINHO_RAIZ, p))]
 
-# Progresso simples
 total = len(subpastas)
 for i, pasta in enumerate(subpastas, 1):
     nome = os.path.basename(pasta)
