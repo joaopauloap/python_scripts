@@ -1,3 +1,4 @@
+from io import BytesIO
 import os
 from PIL import Image
 import pytesseract
@@ -9,7 +10,7 @@ CAMINHO_RAIZ = DIRETORIO_SCRIPT
 DIRETORIO_SAIDA = DIRETORIO_SCRIPT
 
 EXTENSOES_VALIDAS = ('.png', '.jpg', '.jpeg', '.bmp', '.gif', '.tif', '.tiff')
-LARGURA_MAXIMA = 720
+LARGURA_MAXIMA = 500
 
 
 def redimensionar(imagem, largura_maxima):
@@ -21,8 +22,13 @@ def redimensionar(imagem, largura_maxima):
 
 
 def aplicar_ocr_em_imagem(imagem, canvas_pdf, largura, altura):
+    # Comprimir a imagem em JPEG com qualidade 40
+    buffer = BytesIO()
+    imagem.save(buffer, format="JPEG", quality=40)
+    buffer.seek(0)
+
     ocr = pytesseract.image_to_data(imagem, lang="por", output_type=pytesseract.Output.DICT)
-    canvas_pdf.drawImage(ImageReader(imagem), 0, 0, width=largura, height=altura)
+    canvas_pdf.drawImage(ImageReader(buffer), 0, 0, width=largura, height=altura)
 
     n = len(ocr['text'])
     for i in range(n):

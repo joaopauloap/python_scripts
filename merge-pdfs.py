@@ -1,26 +1,23 @@
 import os
-from pypdf import PdfMerger
+from pypdf import PdfReader, PdfWriter
 
-def juntar_pdfs_em_pasta(pasta, nome_saida="pdf_merged.pdf"):
-    merger = PdfMerger()
+def juntar_pdfs_em_pasta(pasta):
+    escritor = PdfWriter()
+    arquivos = sorted(f for f in os.listdir(pasta) if f.endswith(".pdf"))
 
-    # Lista todos os arquivos .pdf na pasta, ordenados pelo nome
-    pdfs = sorted([f for f in os.listdir(pasta) if f.lower().endswith(".pdf")])
+    for nome_arquivo in arquivos:
+        caminho = os.path.join(pasta, nome_arquivo)
+        leitor = PdfReader(caminho)
+        for pagina in leitor.pages:
+            escritor.add_page(pagina)
 
-    if not pdfs:
-        print("Nenhum PDF encontrado na pasta.")
-        return
+    nome_saida = os.path.basename(pasta) + "_merge.pdf"
+    caminho_saida = os.path.join(pasta, nome_saida)
+    with open(caminho_saida, "wb") as f:
+        escritor.write(f)
 
-    print(f"PDFs encontrados ({len(pdfs)}):")
-    for pdf in pdfs:
-        caminho = os.path.join(pasta, pdf)
-        print(f" - Adicionando: {pdf}")
-        merger.append(caminho)
+    print(f"✅ PDF mesclado salvo em: {caminho_saida}")
 
-    saida = os.path.join(pasta, nome_saida)
-    merger.write(saida)
-    merger.close()
-    print(f"\nPDF final salvo em: {saida}")
 
 if __name__ == "__main__":
     import sys
