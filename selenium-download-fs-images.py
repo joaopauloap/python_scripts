@@ -47,15 +47,14 @@ for i in range(COUNT):
     try:
         confirm_button = short_wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, '[data-testid="full-text-confirm-download"]')))
         confirm_button.click()
-        # time.sleep(5)
     except Exception:
         pass
     
     # Clica no botão Próxima imagem
     try:
+        time.sleep(5)
         next_button = wait.until(EC.element_to_be_clickable((By.CSS_SELECTOR, '[aria-label="Próxima Imagem"]')))
         next_button.click()
-        # time.sleep(5)
     except Exception:
         print("Error: Next button not found!")
         break
