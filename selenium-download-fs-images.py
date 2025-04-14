@@ -8,10 +8,10 @@ import time
 import os
 
 # Parametros
-USERNAME = "username"
-PASSWORD = "password"
-URL = "url" 
-COUNT = 10
+USERNAME = ""
+PASSWORD = ""
+URL = "" 
+COUNT = 100
 EXTENSION_FOLDER_NAME = "fs"
 
 # Diretório atual onde está o script
@@ -45,9 +45,12 @@ button_login.click()
 # Aguarda para redirecionamento
 time.sleep(10)
 
-button_ok = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[text()='Muito bem']")))
-button_ok.click()
-time.sleep(1)
+try:
+	button_ok = wait.until(EC.element_to_be_clickable((By.XPATH, "//button[text()='Muito bem']")))
+	button_ok.click()
+	time.sleep(1)
+except Exception:
+        pass
 
 # ===== LOOP DE DOWNLOAD =====
 for i in range(COUNT):
