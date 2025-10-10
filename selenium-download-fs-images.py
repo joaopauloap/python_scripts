@@ -29,6 +29,13 @@ field_username.send_keys(USERNAME)
 field_password.send_keys(PASSWORD)
 button_login.click()
 
+# Botão aceitar cookies
+try:
+    button_cookies = wait.until(EC.element_to_be_clickable((By.ID, "truste-consent-button")))
+    button_cookies.click()
+except Exception as e:
+    print(f"Error: accept cookies button not found!")
+
 # Aguarda para redirecionamento
 time.sleep(5)
 
