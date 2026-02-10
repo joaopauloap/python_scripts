@@ -11,7 +11,7 @@ import os
 USERNAME = ""
 PASSWORD = ""
 URL = "" 
-COUNT = 100
+COUNT = 0
 EXTENSION_FOLDER_NAME = "fs"
 
 # Diretório atual onde está o script
